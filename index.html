@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BHF Habit Tracker</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #e11d48;
+      --accent-light: #ffe4e6;
+      --success: #16a34a;
+      --border: #e2e8f0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .app-container {
+      width: 100%;
+      max-width: 440px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .header-tag {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    h1 { margin: 0 0 4px 0; font-size: 1.4rem; }
+    .date-str { color: var(--muted); font-size: 0.9rem; margin-bottom: 16px; }
+    
+    .exercise-list { list-style: none; padding: 0; margin: 0 0 20px 0; }
+    .exercise-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .exercise-item:last-child { border-bottom: none; }
+    .ex-name { font-weight: 600; font-size: 0.95rem; }
+    .ex-reps { font-size: 0.85rem; color: var(--muted); }
+
+    .check-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--accent);
+      color: #fff;
+    }
+    .check-btn.completed {
+      background: var(--success);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      text-align: center;
+    }
+    .stat-box {
+      background: #f1f5f9;
+      padding: 12px;
+      border-radius: 12px;
+    }
+    .stat-num { font-size: 1.5rem; font-weight: 800; color: var(--text); }
+    .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .day-cell {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .day-cell.done {
+      background: var(--accent-light);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Today's Routine Card -->
+  <div class="card">
+    <div class="header-tag" id="focusTag">DAILY HABIT</div>
+    <h1 id="dayTitle">Today's Workout</h1>
+    <div class="date-str" id="dateDisplay"></div>
+
+    <ul class="exercise-list" id="exerciseList"></ul>
+
+    <button id="toggleBtn" class="check-btn" onclick="toggleToday()">
+      Mark Workout Complete
+    </button>
+  </div>
+
+  <!-- Monthly Compounding Summary -->
+  <div class="card">
+    <div class="header-tag">MONTHLY PROGRESS</div>
+    <h1 id="monthTitle">Monthly Summary</h1>
+    
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-num" id="daysDone">0</div>
+        <div class="stat-label">Days Completed</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="consistencyRate">0%</div>
+        <div class="stat-label">Consistency Rate</div>
+      </div>
+    </div>
+
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+</div>
+
+<script>
+  const routine = {
+    0: { focus: "Decompression & Mobility", list: [ { n: "Band Pull Apart", r: "2 rounds × 12 reps" }, { n: "Dumb Waiter", r: "2 rounds × 12 reps" } ] },
+    1: { focus: "Upper Posture & Pull", list: [ { n: "Band Pull Apart", r: "2-3 rounds × 12-15 reps" }, { n: "Lat Pull Down", r: "2-3 rounds × 10-12 reps" }, { n: "Dumb Waiter", r: "2-3 rounds × 12-15 reps" } ] },
+    2: { focus: "Lower Chain & Hips", list: [ { n: "Squat / Sit-to-Stand", r: "2-3 rounds × 15-20 reps" }, { n: "Hip Abduction", r: "2-3 rounds × 12-15 reps/side" }, { n: "Leg Press", r: "2-3 rounds × 12-15 reps/leg" } ] },
+    3: { focus: "Upper Push & Arms", list: [ { n: "Chest Press", r: "2-3 rounds × 12-15 reps" }, { n: "Bicep Curl", r: "2-3 rounds × 10-12 reps" }, { n: "Triceps Extension", r: "2-3 rounds × 10-12 reps/arm" } ] },
+    4: { focus: "Upper Posture & Shoulders", list: [ { n: "Band Pull Apart", r: "2-3 rounds × 12-15 reps" }, { n: "Lateral Raise", r: "2-3 rounds × 10-12 reps" }, { n: "Lat Pull Down", r: "2-3 rounds × 10-12 reps" } ] },
+    5: { focus: "Lower Chain & Core Balance", list: [ { n: "Squat / Sit-to-Stand", r: "2-3 rounds × 15-20 reps" }, { n: "Hip Abduction", r: "2-3 rounds × 12-15 reps/side" }, { n: "Leg Press", r: "2-3 rounds × 12-15 reps/leg" } ] },
+    6: { focus: "Upper Push & Rotators", list: [ { n: "Chest Press", r: "2-3 rounds × 12-15 reps" }, { n: "Dumb Waiter", r: "2-3 rounds × 12-15 reps" }, { n: "Bicep Curl", r: "2-3 rounds × 10-12 reps" } ] }
+  };
+
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  
+  function getHistory() {
+    return JSON.parse(localStorage.getItem("bhf_habit_history") || "{}");
+  }
+
+  function renderApp() {
+    const history = getHistory();
+    const dayOfWeek = today.getDay();
+    const plan = routine[dayOfWeek];
+
+    // Populate daily card
+    document.getElementById("focusTag").textContent = plan.focus;
+    document.getElementById("dayTitle").textContent = today.toLocaleDateString('en-GB', { weekday: 'long' });
+    document.getElementById("dateDisplay").textContent = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    const listEl = document.getElementById("exerciseList");
+    listEl.innerHTML = plan.list.map(ex => `
+      <li class="exercise-item">
+        <span class="ex-name">${ex.n}</span>
+        <span class="ex-reps">${ex.r}</span>
+      </li>
+    `).join('');
+
+    const isDone = !!history[todayKey];
+    const btn = document.getElementById("toggleBtn");
+    if (isDone) {
+      btn.textContent = "✓ Completed for Today";
+      btn.classList.add("completed");
+    } else {
+      btn.textContent = "Mark Workout Complete";
+      btn.classList.remove("completed");
+    }
+
+    // Populate monthly summary
+    const curYear = today.getFullYear();
+    const curMonth = today.getMonth();
+    document.getElementById("monthTitle").textContent = today.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+    const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+    let completedCount = 0;
+    const gridEl = document.getElementById("calendarGrid");
+    gridEl.innerHTML = "";
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${curYear}-${String(curMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dayDone = !!history[key];
+      if (dayDone) completedCount++;
+
+      const cell = document.createElement("div");
+      cell.className = `day-cell ${dayDone ? 'done' : ''}`;
+      cell.textContent = d;
+      gridEl.appendChild(cell);
+    }
+
+    document.getElementById("daysDone").textContent = `${completedCount} / ${daysInMonth}`;
+    const rate = Math.round((completedCount / today.getDate()) * 100);
+    document.getElementById("consistencyRate").textContent = `${isNaN(rate) ? 0 : rate}%`;
+  }
+
+  function toggleToday() {
+    const history = getHistory();
+    if (history[todayKey]) {
+      delete history[todayKey];
+    } else {
+      history[todayKey] = true;
+    }
+    localStorage.setItem("bhf_habit_history", JSON.stringify(history));
+    renderApp();
+  }
+
+  renderApp();
+</script>
+</body>
+</html>
