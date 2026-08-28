@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BHF Habit Tracker</title>
+  <title>Daily Habit & Nutrition Tracker</title>
   <style>
     :root {
       --bg: #f8fafc;
@@ -13,6 +13,7 @@
       --accent: #e11d48;
       --accent-light: #ffe4e6;
       --success: #16a34a;
+      --success-light: #dcfce7;
       --border: #e2e8f0;
     }
     body {
@@ -44,35 +45,74 @@
       font-weight: 700;
       margin-bottom: 4px;
     }
-    h1 { margin: 0 0 4px 0; font-size: 1.4rem; }
-    .date-str { color: var(--muted); font-size: 0.9rem; margin-bottom: 16px; }
+    h1 { margin: 0 0 4px 0; font-size: 1.35rem; }
+    .date-str { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
     
-    .exercise-list { list-style: none; padding: 0; margin: 0 0 20px 0; }
+    .exercise-list { list-style: none; padding: 0; margin: 0 0 16px 0; }
     .exercise-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 0;
+      padding: 8px 0;
       border-bottom: 1px dashed var(--border);
     }
     .exercise-item:last-child { border-bottom: none; }
-    .ex-name { font-weight: 600; font-size: 0.95rem; }
-    .ex-reps { font-size: 0.85rem; color: var(--muted); }
+    .ex-name { font-weight: 600; font-size: 0.9rem; }
+    .ex-reps { font-size: 0.8rem; color: var(--muted); }
 
-    .check-btn {
-      width: 100%;
-      padding: 14px;
-      font-size: 1rem;
-      font-weight: 700;
-      border: none;
+    .habit-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .habit-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 12px 14px;
       border-radius: 12px;
       cursor: pointer;
+      user-select: none;
       transition: all 0.2s ease;
-      background: var(--accent);
-      color: #fff;
     }
-    .check-btn.completed {
+    .habit-item.checked {
+      background: var(--success-light);
+      border-color: var(--success);
+    }
+    .habit-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .habit-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .habit-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .checkbox-box {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: transparent;
+      transition: all 0.2s ease;
+    }
+    .habit-item.checked .checkbox-box {
       background: var(--success);
+      border-color: var(--success);
+      color: #fff;
     }
 
     .stats-grid {
@@ -86,14 +126,14 @@
       padding: 12px;
       border-radius: 12px;
     }
-    .stat-num { font-size: 1.5rem; font-weight: 800; color: var(--text); }
-    .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+    .stat-num { font-size: 1.4rem; font-weight: 800; color: var(--text); }
+    .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; }
 
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 6px;
-      margin-top: 12px;
+      margin-top: 14px;
     }
     .day-cell {
       aspect-ratio: 1;
@@ -107,9 +147,9 @@
       color: var(--muted);
     }
     .day-cell.done {
-      background: var(--accent-light);
-      color: var(--accent);
-      border: 1px solid var(--accent);
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success);
     }
   </style>
 </head>
@@ -119,25 +159,56 @@
   <!-- Today's Routine Card -->
   <div class="card">
     <div class="header-tag" id="focusTag">DAILY HABIT</div>
-    <h1 id="dayTitle">Today's Workout</h1>
+    <h1 id="dayTitle">Today's Protocol</h1>
     <div class="date-str" id="dateDisplay"></div>
 
     <ul class="exercise-list" id="exerciseList"></ul>
 
-    <button id="toggleBtn" class="check-btn" onclick="toggleToday()">
-      Mark Workout Complete
-    </button>
+    <!-- 4 Core Daily Checkboxes -->
+    <div class="habit-group">
+      <div class="habit-item" id="habit-workout" onclick="toggleHabit('workout')">
+        <div class="habit-info">
+          <span class="habit-title">BHF Resistance Workout</span>
+          <span class="habit-desc">8–10 minute circuit</span>
+        </div>
+        <div class="checkbox-box">✓</div>
+      </div>
+
+      <div class="habit-item" id="habit-creatine" onclick="toggleHabit('creatine')">
+        <div class="habit-info">
+          <span class="habit-title">Creatine Monohydrate</span>
+          <span class="habit-desc">5g taken with water</span>
+        </div>
+        <div class="checkbox-box">✓</div>
+      </div>
+
+      <div class="habit-item" id="habit-protein" onclick="toggleHabit('protein')">
+        <div class="habit-info">
+          <span class="habit-title">Protein Target</span>
+          <span class="habit-desc">120g reached (~1.8g/kg)</span>
+        </div>
+        <div class="checkbox-box">✓</div>
+      </div>
+
+      <div class="habit-item" id="habit-water" onclick="toggleHabit('water')">
+        <div class="habit-info">
+          <span class="habit-title">Water Intake</span>
+          <span class="habit-desc">2.5 Litres completed</span>
+        </div>
+        <div class="checkbox-box">✓</div>
+      </div>
+    </div>
   </div>
 
   <!-- Monthly Compounding Summary -->
   <div class="card">
-    <div class="header-tag">MONTHLY PROGRESS</div>
+    <div class="header-tag">MONTHLY COMPOUNDING</div>
     <h1 id="monthTitle">Monthly Summary</h1>
     
     <div class="stats-grid">
       <div class="stat-box">
         <div class="stat-num" id="daysDone">0</div>
-        <div class="stat-label">Days Completed</div>
+        <div class="stat-label">Full Days Completed</div>
       </div>
       <div class="stat-box">
         <div class="stat-num" id="consistencyRate">0%</div>
@@ -164,7 +235,7 @@
   const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   
   function getHistory() {
-    return JSON.parse(localStorage.getItem("bhf_habit_history") || "{}");
+    return JSON.parse(localStorage.getItem("bhf_habit_history_v2") || "{}");
   }
 
   function renderApp() {
@@ -172,7 +243,6 @@
     const dayOfWeek = today.getDay();
     const plan = routine[dayOfWeek];
 
-    // Populate daily card
     document.getElementById("focusTag").textContent = plan.focus;
     document.getElementById("dayTitle").textContent = today.toLocaleDateString('en-GB', { weekday: 'long' });
     document.getElementById("dateDisplay").textContent = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -185,17 +255,16 @@
       </li>
     `).join('');
 
-    const isDone = !!history[todayKey];
-    const btn = document.getElementById("toggleBtn");
-    if (isDone) {
-      btn.textContent = "✓ Completed for Today";
-      btn.classList.add("completed");
-    } else {
-      btn.textContent = "Mark Workout Complete";
-      btn.classList.remove("completed");
-    }
+    const todayData = history[todayKey] || {};
+    ['workout', 'creatine', 'protein', 'water'].forEach(key => {
+      const el = document.getElementById(`habit-${key}`);
+      if (todayData[key]) {
+        el.classList.add('checked');
+      } else {
+        el.classList.remove('checked');
+      }
+    });
 
-    // Populate monthly summary
     const curYear = today.getFullYear();
     const curMonth = today.getMonth();
     document.getElementById("monthTitle").textContent = today.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
@@ -207,11 +276,13 @@
 
     for (let d = 1; d <= daysInMonth; d++) {
       const key = `${curYear}-${String(curMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const dayDone = !!history[key];
-      if (dayDone) completedCount++;
+      const dayRecord = history[key] || {};
+      const isFullDay = dayRecord.workout && dayRecord.creatine && dayRecord.protein && dayRecord.water;
+      
+      if (isFullDay) completedCount++;
 
       const cell = document.createElement("div");
-      cell.className = `day-cell ${dayDone ? 'done' : ''}`;
+      cell.className = `day-cell ${isFullDay ? 'done' : ''}`;
       cell.textContent = d;
       gridEl.appendChild(cell);
     }
@@ -221,14 +292,12 @@
     document.getElementById("consistencyRate").textContent = `${isNaN(rate) ? 0 : rate}%`;
   }
 
-  function toggleToday() {
+  function toggleHabit(habitKey) {
     const history = getHistory();
-    if (history[todayKey]) {
-      delete history[todayKey];
-    } else {
-      history[todayKey] = true;
-    }
-    localStorage.setItem("bhf_habit_history", JSON.stringify(history));
+    if (!history[todayKey]) history[todayKey] = {};
+    
+    history[todayKey][habitKey] = !history[todayKey][habitKey];
+    localStorage.setItem("bhf_habit_history_v2", JSON.stringify(history));
     renderApp();
   }
 
